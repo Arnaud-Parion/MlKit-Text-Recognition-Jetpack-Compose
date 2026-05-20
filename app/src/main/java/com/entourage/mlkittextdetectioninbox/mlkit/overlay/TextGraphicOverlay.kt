@@ -17,18 +17,16 @@ import kotlin.math.abs
 @Composable
 fun TextGraphicOverlay(
     text: String,
-    boundingBox: Rect, // Rect from ML Kit in image coordinates
-    transformer: CoordinateTransformer,
+    boundingBox: Rect, // Rect from ML Kit in screen coordinates
     color: Color = Color.White,
 ) {
     val textMeasurer = rememberTextMeasurer()
 
     Canvas(modifier = Modifier.fillMaxSize()) {
-        // Map the image coordinates to canvas coordinates
-        val left = transformer.translateX(boundingBox.left.toFloat())
-        val top = transformer.translateY(boundingBox.top.toFloat())
-        val right = transformer.translateX(boundingBox.right.toFloat())
-        val bottom = transformer.translateY(boundingBox.bottom.toFloat())
+        val left = boundingBox.left.toFloat()
+        val top = boundingBox.top.toFloat()
+        val right = boundingBox.right.toFloat()
+        val bottom = boundingBox.bottom.toFloat()
 
         drawText(
             textMeasurer = textMeasurer,

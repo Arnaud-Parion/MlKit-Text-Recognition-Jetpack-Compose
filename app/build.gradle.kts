@@ -68,7 +68,8 @@ dependencies {
 
     // CameraX
     implementation(libs.androidx.camera.core)
-    implementation("androidx.camera:camera-camera2:1.0.0-SNAPSHOT")
-    implementation("androidx.camera:camera-lifecycle:1.0.0-SNAPSHOT")
-    implementation("androidx.camera:camera-view:1.0.0-SNAPSHOT")
+    implementation("androidx.camera:camera-camera2:1.6.1")
+    implementation("androidx.camera:camera-lifecycle:1.6.1")
+    implementation("androidx.camera:camera-view:1.6.1")
+    implementation("androidx.camera:camera-mlkit-vision:1.6.1")
 }

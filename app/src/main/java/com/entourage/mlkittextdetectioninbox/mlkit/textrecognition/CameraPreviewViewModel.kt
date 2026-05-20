@@ -1,14 +1,8 @@
 package com.entourage.mlkittextdetectioninbox.mlkit.textrecognition
 
 import android.graphics.Rect
-import android.util.Log
-import androidx.annotation.OptIn
-import androidx.camera.core.ExperimentalGetImage
-import androidx.camera.core.ImageProxy
 import androidx.lifecycle.ViewModel
-import com.entourage.mlkittextdetectioninbox.mlkit.overlay.ImageSourceInfo
 import com.google.mlkit.vision.text.Text
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,48 +17,27 @@ class CameraPreviewViewModel: ViewModel() {
     private val _uiState = MutableStateFlow<CameraPreviewUiState>(CameraPreviewUiState())
     val uiState: StateFlow<CameraPreviewUiState> = _uiState.asStateFlow()
 
-    private val _sourceInfo = MutableStateFlow<ImageSourceInfo?>(null)
-    val sourceInfo = _sourceInfo.asStateFlow()
+    private var scanAreaInScreenSpace: Rect? = null
 
-    // This is the Scan Area mapped back to the Image coordinate system
-    private var scanAreaInImageSpace: Rect? = null
-
-    private val imageProcessor = TextRecognitionProcessor(TextRecognizerOptions.Builder().build())
-
-    fun updateImageBounds(imageScanArea: Rect) {
-        this.scanAreaInImageSpace = imageScanArea
+    fun updateScanArea(scanArea: Rect) {
+        this.scanAreaInScreenSpace = scanArea
     }
 
-    @OptIn(ExperimentalGetImage::class)
-    fun processImage(imageProxy: ImageProxy) {
-        if (_sourceInfo.value == null) {
-            val rotation = imageProxy.imageInfo.rotationDegrees
-            val info = if (rotation == 0 || rotation == 180) {
-                ImageSourceInfo(imageProxy.width, imageProxy.height)
-            } else {
-                ImageSourceInfo(imageProxy.height, imageProxy.width)
-            }
-            _sourceInfo.value = info
+    fun handleResult(text: Text?) {
+        if (text == null) {
+            _uiState.update { it.copy(inside = emptyList(), outside = emptyList()) }
+            return
         }
 
-        try {
-            imageProcessor.processImageProxy(imageProxy) { handleResult(it) }
-        } catch (e: Exception) {
-            Log.e("CameraVM", "Processing failed", e)
-        }
-    }
-
-    private fun handleResult(
-        text: Text,
-    ) {
-        if (scanAreaInImageSpace == null) {
+        val scanArea = scanAreaInScreenSpace
+        if (scanArea == null) {
             _uiState.update { it.copy(inside = emptyList(), outside = text.textBlocks) }
             return
         }
 
         val (inside, outside) = text.textBlocks.partition { block ->
-            val imageRect = block.boundingBox ?: return@partition false
-            scanAreaInImageSpace!!.contains(imageRect)
+            val rect = block.boundingBox ?: return@partition false
+            scanArea.contains(rect)
         }
 
         _uiState.update { it.copy(inside = inside, outside = outside) }
